@@ -43,18 +43,20 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
  *
  * @param $field array - the field definition
  * @param $instance array - the field instance definition
- * @param $skip_alter boolean - if TRUE it will not allow outside modules ot modify returned list of view modes.
+ * @param $ignore_whitelist boolean - if TRUE it will return the full list of available view modes.
  * @return array - list of view modes
  */
-function er_viewmode_get_view_modes($field, $instance, $skip_alter = FALSE) {
+function er_viewmode_get_view_modes($field, $instance, $ignore_whitelist = FALSE) {
   $target_type = $field['settings']['target_type'];
   $entity_info = entity_get_info($target_type);
   $view_modes = array('full' => 'Default');
   foreach ($entity_info['view modes'] as $view_key => $view_mode) {
-    $view_modes[$view_key] = $view_mode['label'];
+    if ($ignore_whitelist || $field['settings']['handler_settings']['behaviors']['er_viewmode_behavior']['enabled_viewmodes'][$view_key] !== 0) {
+      $view_modes[$view_key] = $view_mode['label'];
+    }
   }
 
-  if (!$skip_alter) {
+  if (!$ignore_whitelist) {
     drupal_alter('er_viewmode_get_view_modes', $view_modes, $field, $instance);
   }
 
