@@ -29,6 +29,7 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
       $element['view_mode'] = array(
         '#type' => 'select',
         '#title' => 'View Mode',
+        '#title_display' => 'invisible',
         '#options' => $view_modes,
         '#default_value' => isset($item) ? $item['view_mode'] : 'full',
         '#weight' => 10,
