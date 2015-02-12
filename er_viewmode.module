@@ -52,7 +52,7 @@ function er_viewmode_get_view_modes($field, $instance, $ignore_whitelist = FALSE
   $entity_info = entity_get_info($target_type);
   $view_modes = array('full' => 'Default');
   foreach ($entity_info['view modes'] as $view_key => $view_mode) {
-    if ($ignore_whitelist || $field['settings']['handler_settings']['behaviors']['er_viewmode_behavior']['enabled_viewmodes'][$view_key] !== 0) {
+    if ($ignore_whitelist || !empty($field['settings']['handler_settings']['behaviors']['er_viewmode_behavior']['enabled_viewmodes'][$view_key])) {
       $view_modes[$view_key] = $view_mode['label'];
     }
   }
