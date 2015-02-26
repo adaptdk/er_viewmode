@@ -176,7 +176,7 @@ function er_viewmode_uuid_node_features_export_render_alter(&$export, $node, $mo
         // change the view mode back to its original value.
         if (
           !empty($field_info['settings']['handler_settings']['behaviors']['er_viewmode_behavior'])
-            && uuid_is_valid($field_value['view_mode'])
+            && (!empty($field_value['view_mode']) && uuid_is_valid($field_value['view_mode']))
         ) {
           $field_value['view_mode'] = $node->{$field_name}[$language][$i]['view_mode'];
         }
