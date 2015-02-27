@@ -161,3 +161,26 @@ function er_viewmode_field_formatter_view($entity_type, $entity, $field, $instan
 
   return $result;
 }
+
+/**
+ * Implements hook_uuid_node_features_export_render_alter().
+ */
+function er_viewmode_uuid_node_features_export_render_alter(&$export, $node, $module) {
+  $fields = uuid_features_get_field_items_iterator($export, 'node', 'entityreference');
+  foreach ($fields as $field_name => &$field_languages) {
+    foreach ($field_languages as $language => &$field_values) {
+      foreach ($field_values as $i => &$field_value) {
+        $field_info = field_info_field($field_name);
+        // If er_viewmode behavior is being used
+        // and the uuid_features module wrongly turned the view mode into a UUID
+        // change the view mode back to its original value.
+        if (
+          !empty($field_info['settings']['handler_settings']['behaviors']['er_viewmode_behavior'])
+            && (!empty($field_value['view_mode']) && uuid_is_valid($field_value['view_mode']))
+        ) {
+          $field_value['view_mode'] = $node->{$field_name}[$language][$i]['view_mode'];
+        }
+      }
+    }
+  }
+}
