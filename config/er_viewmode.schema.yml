@@ -13,10 +13,3 @@ field_config.third_party.er_viewmode:
       sequence:
         - type: string
           label: 'View modes that can be selected for the referenced entity'
-field.widget.third_party.er_viewmode:
-  type: mapping
-  label: 'Entity Reference View Mode Selector field widget settings'
-  mapping:
-    view_mode:
-      type: string
-      label: 'Selected view mode'
