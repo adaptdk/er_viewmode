@@ -30,65 +30,16 @@ function er_viewmode_help($route_name, RouteMatchInterface $route_match) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter for field_ui_field_edit_form.
- * TODO: this functionality should move to the EntityReferenceViewModeItem plugin.
- */
-function er_viewmode_form_field_ui_field_edit_form_alter(array &$form, FormStateInterface $form_state) {
-  $field = $form_state->get('field');
-  if ($field->getType() == 'er_viewmode') {
-    $selector_enabled = $field->getThirdPartySetting('er_viewmode', 'view_mode_selector_enabled', false);
-    $form['field']['third_party_settings']['er_viewmode'] = array(
-      '#type' => 'details',
-      '#title' => t('View Mode Selector'),
-      '#open' => true,
-    );
-    $form['field']['third_party_settings']['er_viewmode']['view_mode_selector_enabled'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Enable view mode selector'),
-      '#description' => t('Allow selection of view mode per referenced entity'),
-      '#default_value' => $selector_enabled,
-    );
-
-    // Get entity type
-    $entity_type = $field->entity_type;
-
-    // Get all available entity view modes.
-    $view_modes = \Drupal::entityManager()->getViewModes($entity_type);
-
-    // Get currently-selected view modes.
-    $current_view_modes = $field->getThirdPartySetting('er_viewmode', 'allowed_view_modes', array());
-
-    // Build choices: view modes for the target entity type.
-    $mode_choices = array();
-
-    foreach ($view_modes as $key => $view_mode) {
-      $id = str_replace('.', '__', $view_mode['id']);
-      $mode_choices[$id] = $view_mode['label'];
-    }
-
-    $form['field']['third_party_settings']['er_viewmode']['allowed_view_modes'] = array(
-      '#type' => 'checkboxes',
-      '#options' => $mode_choices,
-      '#title' => t('Select enabled view modes'),
-      '#default_value' => $current_view_modes,
-    );
-  }
-}
-
-/**
  * Implements hook_field_widget_form_alter().
- * TODO: this functionality should move to a new field widget plugin.
  */
 function er_viewmode_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
-  // Only alter entity reference fields.
+  // Only alter entity reference view mode fields.
   $field_definition = $context['items']->getFieldDefinition();
-  $settings = $field_definition->getSettings();
-  if ($field_definition->getType() == 'er_viewmode' &&
-      $field_definition instanceof ThirdPartySettingsInterface) {
+  if ($field_definition->getType() == 'er_viewmode') {
+    $settings = $field_definition->getSettings();
     // Is view mode selection enabled?
-    $selector_enabled = $field_definition->getThirdPartySetting('er_viewmode', 'view_mode_selector_enabled', false);
-    if ($selector_enabled) {
-      $view_modes = $field_definition->getThirdPartySetting('er_viewmode', 'allowed_view_modes', array());
+    if ($settings['view_mode_settings']['view_mode_selector_enabled']) {
+      $view_modes = $settings['view_mode_settings']['allowed_view_modes'];
       $enabled_view_modes = array();
       $entity_type = $field_definition->getTargetEntityTypeId();
       foreach($view_modes as $mode_id_key => $enabled) {
