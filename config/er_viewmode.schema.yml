@@ -1,0 +1,22 @@
+# Schema for the Entity Reference View Mode Selector module.
+
+field_config.third_party.er_viewmode:
+  type: mapping
+  label: 'Entity Reference View Mode Selector field settings'
+  mapping:
+    view_mode_selector_enabled:
+      type: boolean
+      label: 'Enable the view mode selector'
+    allowed_view_modes:
+      type: sequence
+      label: 'View modes that can be selected for the referenced entity'
+      sequence:
+        - type: string
+          label: 'View modes that can be selected for the referenced entity'
+field.widget.third_party.er_viewmode:
+  type: mapping
+  label: 'Entity Reference View Mode Selector field widget settings'
+  mapping:
+    view_mode:
+      type: string
+      label: 'Selected view mode'
