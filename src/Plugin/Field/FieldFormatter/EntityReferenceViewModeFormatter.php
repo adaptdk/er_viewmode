@@ -56,4 +56,5 @@ class EntityReferenceViewModeFormatter extends EntityReferenceFormatterBase {
 
     return $elements;
   }
+
 }

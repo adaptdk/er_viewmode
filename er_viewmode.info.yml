@@ -1,6 +1,6 @@
-name: Entity reference viewmode selector
+name: Entity reference view mode selector
 type: module
-description: Enables you to add a view mode selector per entityreference field
+description: Provides an entity reference field with a view mode selector.
 core: 8.x
 package: Fields
 dependencies:

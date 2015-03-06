@@ -55,7 +55,7 @@ class EntityReferenceViewModeItem extends ConfigurableEntityReferenceItem {
    */
   public static function defaultFieldSettings() {
     return array(
-      'view_mode_settings' => array (
+      'view_mode_settings' => array(
         'view_mode_selector_enabled' => FALSE,
         'allowed_view_modes' => array(),
       ),
@@ -73,7 +73,7 @@ class EntityReferenceViewModeItem extends ConfigurableEntityReferenceItem {
     $element['view_mode_settings'] = array(
       '#type' => 'details',
       '#title' => t('View Mode Settings'),
-      '#open' => true,
+      '#open' => TRUE,
     );
     $element['view_mode_settings']['view_mode_selector_enabled'] = array(
       '#type' => 'checkbox',
@@ -82,7 +82,7 @@ class EntityReferenceViewModeItem extends ConfigurableEntityReferenceItem {
       '#default_value' => $selector_enabled,
     );
 
-    // Get entity type
+    // Get entity type.
     $entity_type = $settings['target_type'];
 
     // Get all available entity view modes.
@@ -94,7 +94,7 @@ class EntityReferenceViewModeItem extends ConfigurableEntityReferenceItem {
     // Build choices: view modes for the target entity type.
     $mode_choices = array();
 
-    foreach ($view_modes as $key => $view_mode) {
+    foreach ($view_modes as $view_mode) {
       $id = str_replace('.', '__', $view_mode['id']);
       $mode_choices[$id] = $view_mode['label'];
     }
@@ -108,4 +108,5 @@ class EntityReferenceViewModeItem extends ConfigurableEntityReferenceItem {
 
     return $element;
   }
+
 }

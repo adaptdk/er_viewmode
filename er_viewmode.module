@@ -7,9 +7,6 @@
 
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Config\Entity\ThirdPartySettingsInterface;
-use Drupal\Core\Field\WidgetInterface;
-use Drupal\Core\Field\FieldDefinitionInterface;
 
 /**
  * Implements hook_help().
@@ -32,7 +29,7 @@ function er_viewmode_help($route_name, RouteMatchInterface $route_match) {
 /**
  * Implements hook_field_widget_form_alter().
  */
-function er_viewmode_field_widget_form_alter(&$element, \Drupal\Core\Form\FormStateInterface $form_state, $context) {
+function er_viewmode_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
   // Only alter entity reference view mode fields.
   $field_definition = $context['items']->getFieldDefinition();
   if ($field_definition->getType() == 'er_viewmode') {
@@ -42,7 +39,7 @@ function er_viewmode_field_widget_form_alter(&$element, \Drupal\Core\Form\FormSt
       $view_modes = $settings['view_mode_settings']['allowed_view_modes'];
       $enabled_view_modes = array();
       $entity_type = $field_definition->getTargetEntityTypeId();
-      foreach($view_modes as $mode_id_key => $enabled) {
+      foreach ($view_modes as $mode_id_key => $enabled) {
         if ($enabled) {
           $enabled_view_modes[$mode_id_key] = str_replace($entity_type . '__', '', $mode_id_key);
         }
@@ -52,7 +49,7 @@ function er_viewmode_field_widget_form_alter(&$element, \Drupal\Core\Form\FormSt
         // Get the view mode names.
         $all_view_modes = \Drupal::entityManager()->getAllViewModes();
         $view_mode_options = array('full' => t('Default'));
-        foreach($enabled_view_modes as $mode_id_key => $mode_id) {
+        foreach ($enabled_view_modes as $mode_id_key => $mode_id) {
           $view_mode_options[$mode_id] = $all_view_modes[$entity_type][$mode_id]['label'];
         }
 
@@ -75,13 +72,4 @@ function er_viewmode_field_widget_form_alter(&$element, \Drupal\Core\Form\FormSt
       }
     }
   }
-}
-
-/**
- * Implements hook_theme().
- */
-function er_viewmode_theme() {
-  $theme = [];
-
-  return $theme;
 }
