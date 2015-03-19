@@ -1,0 +1,7 @@
+name: Entity reference view mode selector
+type: module
+description: Provides an entity reference field with a view mode selector.
+core: 8.x
+package: Fields
+dependencies:
+  - entity_reference

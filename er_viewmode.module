@@ -1,185 +1,74 @@
 <?php
 
 /**
- * Implements hook_ctools_plugin_directory().
+ * @file
+ * Contains er_viewmode.module
  */
-function er_viewmode_ctools_plugin_directory($module, $plugin) {
-  if ($module == 'entityreference') {
-    return 'plugins/' . $plugin;
+
+use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_help().
+ */
+function er_viewmode_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the er_viewmode module.
+    case 'help.page.er_viewmode':
+      $description = 'Provides an entity reference field with a view mode selector. ' .
+        'This allows you, for each entity reference field instance, to specify the view mode '.
+        'for rendering the referenced entity.';
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t($description) . '</p>';
+      return $output;
+    break;
   }
 }
 
 /**
  * Implements hook_field_widget_form_alter().
  */
-function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) {
-  $field = $context['field'];
-  $instance = $context['instance'];
-  if (er_viewmode_supported_field_widget($field)) {
-    $item = isset($context['items'][$context['delta']]) ? $context['items'][$context['delta']] : NULL;
-    $target_type = $field['settings']['target_type'];
-    $view_modes = er_viewmode_get_view_modes($field, $instance);
-
-    $instance = $context['instance'];
-    if (in_array($instance['widget']['type'], array(
-      'entityreference_autocomplete',
-      'options_select',
-      'options_buttons'
-    ))) {
-      $element['view_mode'] = array(
-        '#type' => 'select',
-        '#title' => 'View Mode',
-        '#title_display' => 'invisible',
-        '#options' => $view_modes,
-        '#default_value' => isset($item) ? $item['view_mode'] : 'full',
-        '#weight' => 10,
-        '#id' => 'view-mode-' . $context['delta'],
-      );
-    }
-  }
-}
-
-/**
- * Fetches view_modes based of the field and instance.
- *
- * @param $field array - the field definition
- * @param $instance array - the field instance definition
- * @param $ignore_whitelist boolean - if TRUE it will return the full list of available view modes.
- * @return array - list of view modes
- */
-function er_viewmode_get_view_modes($field, $instance, $ignore_whitelist = FALSE) {
-  $target_type = $field['settings']['target_type'];
-  $entity_info = entity_get_info($target_type);
-  $view_modes = array('full' => 'Default');
-  foreach ($entity_info['view modes'] as $view_key => $view_mode) {
-    if ($ignore_whitelist || !empty($field['settings']['handler_settings']['behaviors']['er_viewmode_behavior']['enabled_viewmodes'][$view_key])) {
-      $view_modes[$view_key] = $view_mode['label'];
-    }
-  }
-
-  if (!$ignore_whitelist) {
-    drupal_alter('er_viewmode_get_view_modes', $view_modes, $field, $instance);
-  }
-
-  return $view_modes;
-}
-
-/**
- * Check if a field is supported by inline entity form view mode
- *
- * @param $field array - definition of a field
- * @return bool - true if the given field is a supported field.
- */
-function er_viewmode_supported_field_widget($field) {
-  return $field['type'] == 'entityreference' && isset($field['settings']['handler_settings']['behaviors']['er_viewmode_behavior']) && $field['settings']['handler_settings']['behaviors']['er_viewmode_behavior']['status'] == 1;
-}
-
-/**
- * Implements hook_field_formatter_settings_form().
- */
-function er_viewmode_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
-  $element = entityreference_field_formatter_settings_form($field, $instance, $view_mode, $form, $form_state);
-  if (er_viewmode_supported_field_widget($field)) {
-    unset($element['view_mode']);
-    $element['view_mode'] = array(
-      '#type' => 'markup',
-      '#markup' => '<p>' . t('View modes are selected per referenced entity') . '</p>',
-    );
-  }
-  return $element;
-}
-
-/**
- * Implements hook_field_formatter_settings_summary().
- */
-function er_viewmode_field_formatter_settings_summary($field, $instance, $view_mode) {
-  return entityreference_field_formatter_settings_summary($field, $instance, $view_mode);
-}
-
-/**
- * Overwrite entityreference modules field_formatter implementation.
- *
- * @todo research less invasive way of archiving this.
- *
- * Implements hook_field_formatter_info_alter().
- */
-function er_viewmode_field_formatter_info_alter(&$info) {
-  $info['entityreference_entity_view']['module'] = 'er_viewmode';
-}
-
-/**
- * Implements hook_field_formatter_prepare_view().
- */
-function er_viewmode_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays) {
-  return entityreference_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, $items, $displays);
-}
-
-/**
- * Implements hook_field_formatter_view().
- */
-function er_viewmode_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display) {
-  if (!er_viewmode_supported_field_widget($field)) {
-    return entityreference_field_formatter_view($entity_type, $entity, $field, $instance, $langcode, $items, $display);
-  }
-  $result = array();
-  $settings = $display['settings'];
-
-  // Rebuild the items list to contain only those with access.
-  foreach ($items as $key => $item) {
-    if (empty($item['access'])) {
-      unset($items[$key]);
-    }
-  }
-
-  switch ($display['type']) {
-    case 'entityreference_entity_view':
-      foreach ($items as $delta => $item) {
-        // Protect ourselves from recursive rendering.
-        static $depth = 0;
-        $depth++;
-        if ($depth > 20) {
-          throw new EntityReferenceRecursiveRenderingException(t('Recursive rendering detected when rendering entity @entity_type(@entity_id). Aborting rendering.',
-            array(
-              '@entity_type' => $entity_type,
-              '@entity_id' => $item['target_id']
-            )));
+function er_viewmode_field_widget_form_alter(&$element, FormStateInterface $form_state, $context) {
+  // Only alter entity reference view mode fields.
+  $field_definition = $context['items']->getFieldDefinition();
+  if ($field_definition->getType() == 'er_viewmode') {
+    $settings = $field_definition->getSettings();
+    // Is view mode selection enabled?
+    if ($settings['view_mode_settings']['view_mode_selector_enabled']) {
+      $view_modes = $settings['view_mode_settings']['allowed_view_modes'];
+      $enabled_view_modes = array();
+      $entity_type = $field_definition->getTargetEntityTypeId();
+      foreach ($view_modes as $mode_id_key => $enabled) {
+        if ($enabled) {
+          $enabled_view_modes[$mode_id_key] = str_replace($entity_type . '__', '', $mode_id_key);
         }
-
-        $entity = clone $item['entity'];
-        unset($entity->content);
-        $result[$delta] = entity_view($field['settings']['target_type'],
-          array($item['target_id'] => $entity), $item['view_mode'],
-          $langcode, FALSE);
-
-        if (empty($settings['links']) && isset($result[$delta][$field['settings']['target_type']][$item['target_id']]['links'])) {
-          $result[$delta][$field['settings']['target_type']][$item['target_id']]['links']['#access'] = FALSE;
-        }
-        $depth = 0;
       }
-      break;
-  }
 
-  return $result;
-}
-
-/**
- * Implements hook_uuid_node_features_export_render_alter().
- */
-function er_viewmode_uuid_node_features_export_render_alter(&$export, $node, $module) {
-  $fields = uuid_features_get_field_items_iterator($export, 'node', 'entityreference');
-  foreach ($fields as $field_name => &$field_languages) {
-    foreach ($field_languages as $language => &$field_values) {
-      foreach ($field_values as $i => &$field_value) {
-        $field_info = field_info_field($field_name);
-        // If er_viewmode behavior is being used
-        // and the uuid_features module wrongly turned the view mode into a UUID
-        // change the view mode back to its original value.
-        if (
-          !empty($field_info['settings']['handler_settings']['behaviors']['er_viewmode_behavior'])
-            && (!empty($field_value['view_mode']) && uuid_is_valid($field_value['view_mode']))
-        ) {
-          $field_value['view_mode'] = $node->{$field_name}[$language][$i]['view_mode'];
+      if (count($enabled_view_modes) > 0) {
+        // Get the view mode names.
+        $all_view_modes = \Drupal::entityManager()->getAllViewModes();
+        $view_mode_options = array('full' => t('Default'));
+        foreach ($enabled_view_modes as $mode_id_key => $mode_id) {
+          $view_mode_options[$mode_id] = $all_view_modes[$entity_type][$mode_id]['label'];
         }
+
+        // Get the current item.
+        $item = isset($context['items'][$context['delta']]) ? $context['items'][$context['delta']] : NULL;
+        $default_view_mode = 'full';
+        if (isset($item->view_mode)) {
+          $default_view_mode = $item->view_mode;
+        }
+
+        // Add the view modes to the field widget.
+        $element['view_mode'] = array(
+          '#type' => 'select',
+          '#title' => t('View Mode'),
+          '#title_display' => 'invisible',
+          '#options' => $view_mode_options,
+          '#default_value' => $default_view_mode,
+          '#weight' => 10,
+        );
       }
     }
   }

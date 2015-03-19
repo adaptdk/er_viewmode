@@ -1,6 +1,0 @@
-name = Entity reference viewmode selector
-description = Enables you to add a view mode selector per entityreference field
-package = Fields
-core = 7.x
-
-dependencies[] = entityreference
