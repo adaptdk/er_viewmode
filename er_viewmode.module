@@ -17,8 +17,6 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
   $instance = $context['instance'];
 
   if (er_viewmode_supported_field_widget($field)) {
-    $item = isset($context['items'][$context['delta']]) ? $context['items'][$context['delta']] : NULL;
-
     $target_type = $field['settings']['target_type'];
     $view_modes = er_viewmode_get_view_modes($field, $instance);
 
@@ -32,6 +30,8 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
 
       // Only handle actual references
       if (isset($element['target_id'])) {
+        $item = isset($context['items'][$context['delta']]) ? $context['items'][$context['delta']] : NULL;
+
         $element['view_mode'] = array(
           '#type' => 'select',
           '#title' => 'View Mode',
@@ -50,6 +50,8 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
         if (!empty($children)) {
           foreach ($children as $child) {
             if (isset($element[$child]['target_id'])) {
+              $item = isset($context['items'][$child]) ? $context['items'][$child] : NULL;
+
               $element[$child]['view_mode'] = array(
                 '#type' => 'select',
                 '#title' => 'View Mode',
