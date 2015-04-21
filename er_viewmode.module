@@ -15,8 +15,10 @@ function er_viewmode_ctools_plugin_directory($module, $plugin) {
 function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) {
   $field = $context['field'];
   $instance = $context['instance'];
+
   if (er_viewmode_supported_field_widget($field)) {
     $item = isset($context['items'][$context['delta']]) ? $context['items'][$context['delta']] : NULL;
+
     $target_type = $field['settings']['target_type'];
     $view_modes = er_viewmode_get_view_modes($field, $instance);
 
@@ -24,17 +26,45 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
     if (in_array($instance['widget']['type'], array(
       'entityreference_autocomplete',
       'options_select',
-      'options_buttons'
+      'options_buttons',
+      'entityreference_view_widget'
     ))) {
-      $element['view_mode'] = array(
-        '#type' => 'select',
-        '#title' => 'View Mode',
-        '#title_display' => 'invisible',
-        '#options' => $view_modes,
-        '#default_value' => isset($item) ? $item['view_mode'] : 'full',
-        '#weight' => 10,
-        '#id' => 'view-mode-' . $context['delta'],
-      );
+
+      // Only handle actual references
+      if (isset($element['target_id'])) {
+        $element['view_mode'] = array(
+          '#type' => 'select',
+          '#title' => 'View Mode',
+          '#title_display' => 'invisible',
+          '#options' => $view_modes,
+          '#default_value' => isset($item) ? $item['view_mode'] : 'full',
+          // Set name so data will be saved correctly
+          '#name' => $context['field']['field_name'] . '[' . $context['langcode'] . ']' . '[' . $context['delta'] . '][view_mode]',
+          '#weight' => 10,
+          '#id' => 'view-mode-' . $context['delta'],
+        );
+      }
+      else {
+        // Some widgets have references as children in the element structure
+        $children = element_children($element);
+        if (!empty($children)) {
+          foreach ($children as $child) {
+            if (isset($element[$child]['target_id'])) {
+              $element[$child]['view_mode'] = array(
+                '#type' => 'select',
+                '#title' => 'View Mode',
+                '#title_display' => 'invisible',
+                '#options' => $view_modes,
+                '#default_value' => isset($item) ? $item['view_mode'] : 'full',
+                // Set name so data will be saved correctly
+                '#name' => $context['field']['field_name'] . '[' . $context['langcode'] . ']' . '[' . $child . '][view_mode]',
+                '#weight' => 10,
+                '#id' => 'view-mode-' . $child,
+              );
+            }
+          }
+        }
+      }
     }
   }
 }
