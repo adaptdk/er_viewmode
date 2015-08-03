@@ -38,6 +38,10 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
           '#name' => $context['field']['field_name'] . '[' . $context['langcode'] . ']' . '[' . $delta . '][view_mode]',
           '#weight' => 10,
           '#id' => 'view-mode-' . $delta,
+          '#ajax' => array(
+            'callback' => '_dsr_section_viewmode_wrapper_callback',
+            'wrapper' => 'bobbelop',
+          ),
         );
       };
 
@@ -52,6 +56,12 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
           foreach ($children as $child) {
             if (isset($element[$child]['target_id'])) {
               $element[$child]['view_mode'] = $view_mode_element($view_modes, $context, $child);
+              $element[$child]['view_mode_preview'] = _dsr_section_viewmode_preview_element(
+                382,
+                'one_third_standard',
+                'boppelop'
+              );
+              $element[$child]['view_mode_preview']['#weight'] = 100;
             }
           }
         }
