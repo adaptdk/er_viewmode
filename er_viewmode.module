@@ -38,6 +38,9 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
           '#name' => $context['field']['field_name'] . '[' . $context['langcode'] . ']' . '[' . $delta . '][view_mode]',
           '#weight' => 10,
           '#id' => 'view-mode-' . $delta,
+          '#attributes' => array(
+            'class' => array('viewmode-selector'),
+          )
         );
       };
 
