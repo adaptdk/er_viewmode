@@ -10,6 +10,31 @@ class ERViewModeBehavior extends EntityReference_BehaviorHandler_Abstract {
       'default' => 'full',
       'not null' => FALSE,
     );
+    $schema['columns']['view_options'] = array(
+      'type' => 'blob',
+      'size' => 'big',
+      'description' => 'Serialized data containing the target entity view options.',
+    );
+  }
+
+  public function load($entity_type, $entities, $field, $instances, $langcode, &$items) {
+    foreach ($items as &$by_entity) {
+      foreach ($by_entity as &$item) {
+        $item['view_options'] = unserialize($item['view_options']);
+      }
+    }
+  }
+
+  public function insert($entity_type, $entity, $field, $instance, $langcode, &$items) {
+    foreach ($items as &$item) {
+      $item['view_options'] = serialize($item['view_options']);
+    }
+  }
+
+  public function update($entity_type, $entity, $field, $instance, $langcode, &$items) {
+    foreach ($items as &$item) {
+      $item['view_options'] = serialize($item['view_options']);
+    }
   }
 
   public function property_info_alter(&$info, $entity_type, $field, $instance, $field_type) {

@@ -35,6 +35,17 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
         '#weight' => 10,
         '#id' => 'view-mode-' . $context['delta'],
       );
+      $element['view_options'] = array(
+        '#tree' => 'true',
+        '#weight' => 11,
+        'classes' => array(
+          '#type' => 'textfield',
+          '#attributes' => array(
+            'placeholder' => t('Additional CSS classes'),
+          ),
+          '#default_value' => !empty($item['view_options']['classes']) ? $item['view_options']['classes'] : '',
+        ),
+      );
     }
   }
 }
@@ -151,6 +162,8 @@ function er_viewmode_field_formatter_view($entity_type, $entity, $field, $instan
           array($item['target_id'] => $entity), $item['view_mode'],
           $langcode, FALSE);
 
+        $result[$delta][$field['settings']['target_type']][$item['target_id']]['#view_options'] = $item['view_options'];
+
         if (empty($settings['links']) && isset($result[$delta][$field['settings']['target_type']][$item['target_id']]['links'])) {
           $result[$delta][$field['settings']['target_type']][$item['target_id']]['links']['#access'] = FALSE;
         }
@@ -182,5 +195,14 @@ function er_viewmode_uuid_node_features_export_render_alter(&$export, $node, $mo
         }
       }
     }
+  }
+}
+
+/**
+ * Processes variables for entity.tpl.php.
+ */
+function er_viewmode_preprocess_entity(&$vars) {
+  if (!empty($vars['elements']['#view_options']['classes'])) {
+    $vars['classes_array'][] = $vars['elements']['#view_options']['classes'];
   }
 }
