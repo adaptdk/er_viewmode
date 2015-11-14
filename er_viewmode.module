@@ -203,6 +203,6 @@ function er_viewmode_uuid_node_features_export_render_alter(&$export, $node, $mo
  */
 function er_viewmode_preprocess_entity(&$vars) {
   if (!empty($vars['elements']['#view_options']['classes'])) {
-    $vars['classes_array'][] = $vars['elements']['#view_options']['classes'];
+    $vars['classes_array'][] = check_plain($vars['elements']['#view_options']['classes']);
   }
 }
