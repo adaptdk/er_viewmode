@@ -4,3 +4,4 @@ package = Fields
 core = 7.x
 
 dependencies[] = entityreference
+files[] = plugins/behavior/ERViewModeBehavior.class.php
