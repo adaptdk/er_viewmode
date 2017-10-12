@@ -1,0 +1,7 @@
+name = Entity reference viewmode selector + IEF
+description = Integrates with Inline Entity Form module
+package = Fields
+core = 7.x
+
+dependencies[] = er_viewmode
+dependencies[] = inline_entity_form

@@ -1,0 +1,125 @@
+<?php
+
+/**
+ * @file
+ * Module file.
+ */
+
+/**
+ * Implements hook_field_widget_form_alter().
+ */
+function er_viewmode_ief_field_widget_form_alter(&$element, &$form_state, $context) {
+  $field = $context['field'];
+  $instance = $context['instance'];
+  if ($instance['widget']['type'] !== 'inline_entity_form' || !er_viewmode_supported_field_widget($field)) {
+    return;
+  }
+
+  // Inline Entity Form sends all items at once only once.
+  // And it keeps them in $form_state.
+  $ief_id = $element['#ief_id'];
+  if (empty($form_state['inline_entity_form'][$ief_id]['entities'])) {
+    return;
+  }
+
+  $view_modes = er_viewmode_get_view_modes($field, $instance);
+
+  $view_mode_element = array(
+    '#type' => 'select',
+    '#title' => 'View Mode',
+    '#title_display' => 'invisible',
+    '#options' => $view_modes,
+    '#weight' => 10,
+  );
+
+  foreach ($form_state['inline_entity_form'][$ief_id]['entities'] as $delta => &$item) {
+    if (!empty($context['items'][$delta]['view_mode'])) {
+      $item['view_mode'] = $context['items'][$delta]['view_mode'];
+    }
+    else {
+      $item['view_mode'] = 'full';
+    }
+    $element['entities'][$delta]['view_mode'] = array(
+      '#default_value' => $item['view_mode'],
+      '#id' => 'view-mode-' . $delta,
+    ) + $view_mode_element;
+  }
+}
+
+/**
+ * Implements hook_inline_entity_form_table_fields_alter().
+ */
+function er_viewmode_ief_inline_entity_form_table_fields_alter(&$fields, $context) {
+  $fields['er_viewmode'] = array(
+    'type' => 'callback',
+    'label' => t('View mode'),
+    'render_callback' => 'er_viewmode_ief_table_fields_callback',
+  );
+}
+
+/**
+ * IEF callback to render the view_mode selection form input.
+ *
+ * Needs this patch to inline_entity_form module:
+ * https://www.drupal.org/node/2915690#comment-12296392
+ */
+function er_viewmode_ief_table_fields_callback($entity_type, $entity, $form, $element_key) {
+  if (!empty($form[$element_key]['view_mode'])) {
+    return $form[$element_key]['view_mode'];
+  }
+  return NULL;
+}
+
+/**
+ * Implements hook_field_attach_submit().
+ *
+ * IEF discards any field values besides target_id. Therefore,
+ * this implementation needs to run after it and pretty much,
+ * re-runs same logic.
+ *
+ * @see inline_entity_form_field_attach_submit()
+ */
+function er_viewmode_ief_field_attach_submit($parent_entity_type, $parent_entity, $form, &$form_state) {
+  list(, , $bundle_name) = entity_extract_ids($parent_entity_type, $parent_entity);
+
+  foreach (field_info_instances($parent_entity_type, $bundle_name) as $instance_name => $instance) {
+    if (isset($instance['widget']) && $instance['widget']['type'] === 'inline_entity_form') {
+      $field_name = $instance['field_name'];
+      if (!isset($form[$field_name])) {
+        // The field wasn't found on this form, skip it.
+        // Usually happens on stub entity forms that don't contain all fields.
+        continue;
+      }
+      $langcode = $form[$field_name]['#language'];
+      if (!isset($form[$field_name][$langcode]['#ief_id'])) {
+        // The field is present on the form, but the IEF widget wasn't added,
+        // usually due to inline_entity_form_field_widget_properties_alter().
+        continue;
+      }
+      $ief_id = $form[$field_name][$langcode]['#ief_id'];
+      if (empty($form_state['inline_entity_form'][$ief_id])) {
+        // No data found, no need to do anything.
+        continue;
+      }
+
+      $values = $form_state['inline_entity_form'][$ief_id];
+      $entity_type = $values['settings']['entity_type'];
+
+      // Respect the entity weights.
+      uasort($values['entities'], 'drupal_sort_weight');
+      // Go through the IEF data and assemble a list of ids and view_modes.
+      $entity_ids = array();
+      foreach ($values['entities'] as $key => $item) {
+        list($entity_id) = entity_extract_ids($entity_type, $item['entity']);
+        $entity_ids[] = array(
+          $values['settings']['column'] => $entity_id,
+          'view_mode' => $form_state['values'][$field_name][$langcode]['entities'][$key]['view_mode'],
+        );
+      }
+
+      if (!empty($entity_ids)) {
+        $parent_entity->{$field_name}[$langcode] = $entity_ids;
+      }
+    }
+  }
+}
