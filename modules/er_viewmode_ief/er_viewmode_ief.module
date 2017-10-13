@@ -85,6 +85,7 @@ function er_viewmode_ief_field_attach_submit($parent_entity_type, $parent_entity
   foreach (field_info_instances($parent_entity_type, $bundle_name) as $instance_name => $instance) {
     if (isset($instance['widget']) && $instance['widget']['type'] === 'inline_entity_form') {
       $field_name = $instance['field_name'];
+      $field = field_info_field($field_name);
       if (!isset($form[$field_name])) {
         // The field wasn't found on this form, skip it.
         // Usually happens on stub entity forms that don't contain all fields.
@@ -113,7 +114,7 @@ function er_viewmode_ief_field_attach_submit($parent_entity_type, $parent_entity
         list($entity_id) = entity_extract_ids($entity_type, $item['entity']);
         $entity_ids[] = array(
           $values['settings']['column'] => $entity_id,
-          'view_mode' => $form_state['values'][$field_name][$langcode]['entities'][$key]['view_mode'],
+          'view_mode' => er_viewmode_ief_get_valid_view_mode($field, $instance, $form_state['values'][$field_name][$langcode]['entities'][$key]['view_mode']),
         );
       }
 
@@ -121,5 +122,24 @@ function er_viewmode_ief_field_attach_submit($parent_entity_type, $parent_entity
         $parent_entity->{$field_name}[$langcode] = $entity_ids;
       }
     }
+  }
+}
+
+/**
+ * Given a $tentative_view_mode, return it only if it is valid.
+ *
+ * Otherwise return the first possible valid view_mode.
+ */
+function er_viewmode_ief_get_valid_view_mode($field, $instance, $tentative_view_mode) {
+  $view_modes = er_viewmode_get_view_modes($field, $instance);
+  if (!empty($view_modes[$tentative_view_mode])) {
+    return $tentative_view_mode;
+  }
+  elseif ($view_modes) {
+    $keys = array_keys($view_modes);
+    return $keys[0];
+  }
+  else {
+    return 'full';
   }
 }
