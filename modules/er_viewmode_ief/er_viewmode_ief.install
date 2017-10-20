@@ -1,0 +1,20 @@
+<?php
+
+/**
+ * @file
+ * Install file.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function er_viewmode_ief_install() {
+  // Get the weight of the Inline Entity Form module.
+  $weight = (int) db_query('SELECT weight FROM {system} WHERE name = :name', array(':name' => 'inline_entity_form'))->fetchField();
+
+  // We want this module to have a bigger weight.
+  // @see er_viewmode_ief_field_attach_submit().
+  $weight += 10;
+
+  db_query('UPDATE {system} SET weight = :weight WHERE name = :name', array(':weight' => $weight, ':name' => 'er_viewmode_ief'));
+}
