@@ -50,6 +50,11 @@ function er_viewmode_ief_field_widget_form_alter(&$element, &$form_state, $conte
  * Implements hook_inline_entity_form_table_fields_alter().
  */
 function er_viewmode_ief_inline_entity_form_table_fields_alter(&$fields, $context) {
+  $field = field_info_field($context['field_name']);
+  if (!er_viewmode_supported_field_widget($field)) {
+    return;
+  }
+
   $fields['er_viewmode'] = array(
     'type' => 'callback',
     'label' => t('View mode'),
