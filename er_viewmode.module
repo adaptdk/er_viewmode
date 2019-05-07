@@ -28,6 +28,13 @@ function er_viewmode_field_widget_form_alter(&$element, &$form_state, $context) 
     ))) {
       $view_mode_element = function($view_modes, $context, $delta) {
         $items = !empty($context['items']) ? $context['items'] : array();
+
+        // This is some times an object now after some module updates. Add
+        // support for the data to be both array and object to get on with it...
+        if (!empty($items[$delta])) {
+          $items[$delta] = (array) $items[$delta];
+        }
+
         return array(
           '#type' => 'select',
           '#title' => 'View Mode',
