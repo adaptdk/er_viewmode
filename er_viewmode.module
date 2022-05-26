@@ -104,7 +104,9 @@ function er_viewmode_field_formatter_settings_summary($field, $instance, $view_m
  * Implements hook_field_formatter_info_alter().
  */
 function er_viewmode_field_formatter_info_alter(&$info) {
-  $info['entityreference_entity_view']['module'] = 'er_viewmode';
+  if (isset($info['entityreference_entity_view'])) {
+    $info['entityreference_entity_view']['module'] = 'er_viewmode';
+  }
 }
 
 /**
